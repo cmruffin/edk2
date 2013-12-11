@@ -415,6 +415,22 @@ QemuVideoControllerDriverStart (
                     &Private->GraphicsOutput,
                     NULL
                     );
+    if (EFI_ERROR (Status)) {
+      goto Error;
+    }
+
+    Status = gBS->OpenProtocol (
+                  Controller,
+                  &gEfiPciIoProtocolGuid,
+                  &Private->Handle,
+                  This->DriverBindingHandle,
+                  Private->Handle,
+                  EFI_OPEN_PROTOCOL_BY_CHILD_CONTROLLER
+                  );
+
+    if (EFI_ERROR (Status)) {
+      goto Error;
+    }
   }
 
 Error:
@@ -437,6 +453,13 @@ Error:
         //
         gBS->CloseProtocol (
               Private->Handle,
+              &gEfiPciIoProtocolGuid,
+              This->DriverBindingHandle,
+              Controller
+              );
+
+        gBS->CloseProtocol (
+              Controller,
               &gEfiPciIoProtocolGuid,
               This->DriverBindingHandle,
               Private->Handle
@@ -527,6 +550,13 @@ QemuVideoControllerDriverStop (
         &gEfiPciIoProtocolGuid,
         This->DriverBindingHandle,
         Controller
+        );
+
+  gBS->CloseProtocol (
+        Controller,
+        &gEfiPciIoProtocolGuid,
+        This->DriverBindingHandle,
+        Private->Handle
         );
 
   //
